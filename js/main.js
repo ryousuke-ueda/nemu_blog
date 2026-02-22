@@ -3,33 +3,49 @@ const articlesListElement = document.getElementById("articles-list");
 const prevArticleLinkElement = document.getElementById("prev-article-link");
 const nextArticleLinkElement = document.getElementById("next-article-link");
 const articlesCacheKey = "unity-blog-articles-cache";
+const isArticlePage = decodeURIComponent(window.location.pathname).split("/").includes("articles");
+const articlesDataPath = isArticlePage ? "../data/articles.json" : "./data/articles.json";
 
 const fallbackArticles = [
   {
     title: "Unity学習ログ #01: 環境構築メモ",
     date: "2026-02-22",
     summary: "Unity Hubの導入、プロジェクト作成、初期設定の確認。",
-    url: "./articles/001.html"
+    url: "articles/001.html"
   },
   {
     title: "Unity学習ログ #02: シーンとゲームオブジェクトの基本",
     date: "2026-02-22",
     summary: "Scene、Hierarchy、Inspector の基本操作を整理。",
-    url: "./articles/002.html"
+    url: "articles/002.html"
   },
   {
     title: "Unity学習ログ #03: C#スクリプトの最初の一歩",
     date: "2026-02-22",
     summary: "MonoBehaviour、Update、Debug.Log を試して挙動を確認。",
-    url: "./articles/003.html"
+    url: "articles/003.html"
   },
   {
     "title": "Unity学習ログ #04: The,テスト記事",
     "date": "2026-02-22",
     "summary": "追加できるかどうかのテストだけよん。",
-    "url": "./articles/004.html"
+    "url": "articles/004.html"
   }
 ];
+
+function toArticleHref(articleUrl) {
+  const normalized = String(articleUrl || "").replaceAll("\\", "/").replace(/^\.\//, "");
+  if (!normalized) {
+    return "#";
+  }
+
+  if (isArticlePage) {
+    const fileName = normalized.split("/").pop();
+    return fileName ? `./${fileName}` : "#";
+  }
+
+  return `./${normalized}`;
+}
 
 function renderArticles(articles) {
   if (!articlesListElement) {
@@ -40,7 +56,7 @@ function renderArticles(articles) {
     .map(
       (article) => `
         <li class="article-item">
-          <a class="article-link" href="${article.url}">${article.title}</a>
+          <a class="article-link" href="${toArticleHref(article.url)}">${article.title}</a>
           <p class="article-meta">公開日: ${article.date}</p>
           <p class="article-summary">${article.summary}</p>
         </li>
@@ -72,7 +88,7 @@ function renderArticlePager(articles) {
 
   if (prevArticleLinkElement) {
     if (prevArticle) {
-      prevArticleLinkElement.href = prevArticle.url;
+      prevArticleLinkElement.href = toArticleHref(prevArticle.url);
       prevArticleLinkElement.textContent = `前の記事: ${prevArticle.title}`;
       prevArticleLinkElement.hidden = false;
     } else {
@@ -82,7 +98,7 @@ function renderArticlePager(articles) {
 
   if (nextArticleLinkElement) {
     if (nextArticle) {
-      nextArticleLinkElement.href = nextArticle.url;
+      nextArticleLinkElement.href = toArticleHref(nextArticle.url);
       nextArticleLinkElement.textContent = `次の記事: ${nextArticle.title}`;
       nextArticleLinkElement.hidden = false;
     } else {
@@ -127,7 +143,7 @@ function renderWithArticles(articles) {
 
 async function loadArticles() {
   try {
-    const response = await fetch("../data/articles.json", { cache: "no-store" });
+    const response = await fetch(articlesDataPath, { cache: "no-store" });
     if (!response.ok) {
       throw new Error(`Failed to fetch articles: ${response.status}`);
     }
